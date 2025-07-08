@@ -5,8 +5,7 @@ const Listing = require("./models/listing.js");
 const path = require("path");
 const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate"); // EJS layout engine for Express
-const wrapAsync = require("./utils/wrapAsync.js"); // Utility to wrap async functions for error handling
-const ExpressError = require("./utils/ExpressError.js"); // Custom error class for handling errors in Express   
+
 
 const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 
@@ -38,10 +37,10 @@ app.get("/", (req, res) => {
 
 
 //INDEX ROUTE 
-app.get("/listings", wrapAsync(async (req, res, next) => {
+app.get("/listings", async (req, res) => {
     const allListings = await Listing.find({});// Fetch all listings from the database
     res.render("listings", {allListings}); // passing all listings to the template
-}));
+});
 
 //NEW ROUTE
 
@@ -51,17 +50,17 @@ app.get("/listings/new", (req, res) => {
 
 
 //SHOW ROUTE
-app.get("/listings/:id", wrapAsync(async (req, res, next ) => {
+app.get("/listings/:id", async (req, res ) => {
    let id = req.params.id; // Get the ID from the URL parameters
    const listing = await Listing.findById(id);
    res.render("listings/show", { listing });
-}));
+})
 
 
 //CREATE ROUTE
 
 app.post("/listings", 
-    wrapAsync(async (req, res, next) => {
+    (async (req, res) => {
     const newListing = new Listing(req.body.listing); // Create a new listing using the data from the form
     // req.body.listing contains the data from the form submission
     await newListing.save(); // Save the new listing to the database
@@ -72,27 +71,27 @@ app.post("/listings",
 
 // EDIT ROUTE
 
-app.get("/listings/:id/edit", wrapAsync(async (req, res, next) => {
-    const id = req.params.id; // Get the ID from the URL parameters
+app.get("/listings/:id/edit", async (req, res) => {
+    const id = req.params.id; // Get the ID from the URL parameters 
     const listing = await Listing.findById(id); // Find the listing by ID
     res.render("listings/edit.ejs", { listing }); // Render the edit form with the listing data
-}));
+});
 
 // UPDATE ROUTE 
 
-app.put("/listings/:id", wrapAsync(async (req, res, next) => {
+app.put("/listings/:id", async (req, res) => {
     const id = req.params.id; // Get the ID from the URL parameters
     await Listing.findByIdAndUpdate(id, {...req.body.listing}); // Update the listing with the new data
     res.redirect(`/listings/${id}`);
-}));
+});
 
 //DELETE ROUTE//                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
 
-app.delete("/listings/:id", wrapAsync(async (req, res, next) => {
-    const id = req.params.id; // Get the ID from the URL parameters
+app.delete("/listings/:id", async (req, res) => {
+    const id = req.params.id; // Get the ID from the URL parameters 
     const deletedListing = await Listing.findByIdAndDelete(id); // Delete the listing by ID
-    res.redirect("/listings"); // Redirect to the listings page after deletion
-}));
+    res.redirect("/listings"); // Redirect to the listings page after deletion  
+});
 
 // app.get("/testListing", async(req, res) => {
 //     let sampleListing = new Listing ({
@@ -107,16 +106,7 @@ app.delete("/listings/:id", wrapAsync(async (req, res, next) => {
 //     console.log("sample was saved");
 //     res.send("Sample listing saved");
 // });
-// Catch-all route for undefined paths
-app.all("*", (req, res, next) => {
-    next(new ExpressError("Page Not Found", 404));
-});
 
-// Error-handling middleware
-app.use((err, req, res, next) => {
-    let { statusCode = 500, message = "Something went wrong" } = err;
-    res.status(statusCode).send(message);
-});
 
 app.listen(8080 , () => {
     console.log("Server is running on port 8080");
